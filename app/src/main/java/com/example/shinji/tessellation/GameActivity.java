@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -19,12 +18,6 @@ import static java.lang.Math.sqrt;
 
 public class GameActivity extends AppCompatActivity{
 
-	private static final int StrokeWidth = 100;
-	private static final int StrokeHarfWidth = 50;
-
-	// Canvas 中心点
-	private float center_x = 0.0f;
-	private float center_y = 0.0f;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +31,27 @@ public class GameActivity extends AppCompatActivity{
 		Paint paint;
 		int r = 0,g = 0,b = 255;
 		int fill_x = -999,fill_y = -999;
+
+		// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
+		private static final int SQUARE_NUM = 10;
+
+		// 矩形の一辺の長さ
+		private static final int SQUARE_LENGTH = 100;
+
+		// 移動マーカーの半径
+		public static final int DIRECTION_RADIUS = 80;
+
+		// Canvas 中心点
+		private float center_x = 0.0f;
+		private float center_y = 0.0f;
+
 		// オブジェクトの移動位置
 		int move_x = 0,move_y = 0;
 
 		// 現在タッチしている位置
 		int now_touch_x = 0,now_touch_y = 0;
 
-		// タッチした位置をセーブ
+		// セーブしたタッチ位置
 		int save_touch_x = 0,save_touch_y = 0;
 
 		// 最低限必要な移動範囲
@@ -52,8 +59,6 @@ public class GameActivity extends AppCompatActivity{
 
 		// 現在タッチ中かのフラグ
 		boolean touch_flg = false;
-
-
 
 		// オブジェクトの移動速度
 		int speed = 4;
@@ -67,7 +72,12 @@ public class GameActivity extends AppCompatActivity{
 		protected void onDraw(Canvas canvas) {
 
 			int i,j;
-			int xy[] = {0,0};
+
+			// セーブ位置と指示器の差分
+			int indicatorDiff[] = {0,0};
+
+			// 指示器の位置
+			int indicatorXY[] = {0,0};
 
 			// 背景
 			canvas.drawColor(Color.argb(0, 0, 0, 0));
@@ -76,8 +86,19 @@ public class GameActivity extends AppCompatActivity{
 			center_x = canvas.getWidth()/2;
 			center_y = canvas.getHeight()/2;
 
-			Log.w( "DEBUG_DATA", "canvas.getWidth() " + String.valueOf(canvas.getWidth()));
-			Log.w( "DEBUG_DATA", "canvas.getHeight() " + String.valueOf(canvas.getHeight()));
+			//Log.w( "DEBUG_DATA", "canvas.getWidth() " + String.valueOf(canvas.getWidth()));
+			//Log.w( "DEBUG_DATA", "canvas.getHeight() " + String.valueOf(canvas.getHeight()));
+
+			if(touch_flg){
+				// タップ移動比率xyと指示マーカーのxyを取得
+				getIndicatorXY(save_touch_x,save_touch_y,now_touch_x,now_touch_y,indicatorDiff,indicatorXY);
+				//Log.w( "DEBUG_DATA", "indicatorDiff[0] " + indicatorDiff[0] );
+				//Log.w( "DEBUG_DATA", "indicatorDiff[1] " + indicatorDiff[1] );
+				move_x = move_x - (indicatorDiff[0] / 10);
+				move_y = move_y - (indicatorDiff[1] / 10);
+				//Log.w( "DEBUG_DATA", "move_x " + move_x );
+				//Log.w( "DEBUG_DATA", "move_y " + move_y );
+			}
 
 			// 矩形
 			if(fill_x != -999 && fill_y != -999){
@@ -87,12 +108,11 @@ public class GameActivity extends AppCompatActivity{
 				i = fill_x;
 				j = fill_y;
 				canvas.drawRect(
-						center_x - StrokeHarfWidth + (StrokeWidth * i) + move_x,
-						center_y - StrokeHarfWidth + (StrokeWidth * j) + move_y,
-						center_x + StrokeHarfWidth + (StrokeWidth * i) + move_x,
-						center_y + StrokeHarfWidth + (StrokeWidth * j) + move_y,
+						center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
+						center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
+						center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
+						center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
 						paint);
-
 			}
 
 			paint.setColor(Color.argb(255, 0, 0, 255));
@@ -100,15 +120,15 @@ public class GameActivity extends AppCompatActivity{
 			paint.setStyle(Paint.Style.STROKE);
 
 			// 基本グリッド
-			for(i = -20; i <= 20; i++){
-				for(j = -20; j <= 20; j++){
+			for(i = -SQUARE_NUM; i <= SQUARE_NUM; i++){
+				for(j = -SQUARE_NUM; j <= SQUARE_NUM; j++){
 					// 縦横に10個ずつ
 					// (x1,y1,x2,y2,paint) 左上の座標(x1,y1), 右下の座標(x2,y2)
 					canvas.drawRect(
-							center_x - StrokeHarfWidth + (StrokeWidth * i) + move_x,
-							center_y - StrokeHarfWidth + (StrokeWidth * j) + move_y,
-							center_x + StrokeHarfWidth + (StrokeWidth * i) + move_x,
-							center_y + StrokeHarfWidth + (StrokeWidth * j) + move_y,
+							center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
+							center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
+							center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
+							center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
 							paint);
 				}
 			}
@@ -119,16 +139,14 @@ public class GameActivity extends AppCompatActivity{
 				paint.setStrokeWidth(20);
 				paint.setStyle(Paint.Style.STROKE);
 				paint.setAntiAlias(true);
-				canvas.drawCircle(save_touch_x, save_touch_y, 80, paint);
-
+				canvas.drawCircle(save_touch_x, save_touch_y, DIRECTION_RADIUS, paint);
 
 				// セーブタップ位置を中心にタップ〇移動範囲を表示
 				paint.setColor(Color.argb(120, 188, 200, 219)); // 水浅葱
 				paint.setStrokeWidth(20);
 				paint.setStyle(Paint.Style.STROKE);
 				paint.setAntiAlias(true);
-				canvas.drawCircle(save_touch_x, save_touch_y, 240, paint);
-
+				canvas.drawCircle(save_touch_x, save_touch_y, DIRECTION_RADIUS * 3, paint);
 
 				// 移動方向に〇を表示
 				paint.setColor(Color.argb(120, 235, 121, 136)); // 水浅葱
@@ -136,24 +154,25 @@ public class GameActivity extends AppCompatActivity{
 				paint.setStyle(Paint.Style.STROKE);
 				paint.setAntiAlias(true);
 
-				naviXY(save_touch_x,save_touch_y,now_touch_x,now_touch_y,xy);
+				canvas.drawCircle(indicatorXY[0], indicatorXY[1], DIRECTION_RADIUS, paint);
 
-
-				canvas.drawCircle(xy[0], xy[1], 80, paint);
-//				canvas.drawCircle(save_touch_x + 80, save_touch_y, 80, paint);
-
-
-				Log.w( "DEBUG_DATA", "CENTER save_touch_x " + save_touch_x );
-				Log.w( "DEBUG_DATA", "CENTER save_touch_y " + save_touch_y );
-				Log.w( "DEBUG_DATA", "CENTER xy[0] " + xy[0] );
-				Log.w( "DEBUG_DATA", "CENTER xy[1] " + xy[1] );
+				//Log.w( "DEBUG_DATA", "CENTER save_touch_x " + save_touch_x );
+				//Log.w( "DEBUG_DATA", "CENTER save_touch_y " + save_touch_y );
+				//Log.w( "DEBUG_DATA", "CENTER direXY[0] " + indicatorXY[0] );
+				//Log.w( "DEBUG_DATA", "CENTER direXY[1] " + indicatorXY[1] );
 			}
 		}
-		public void naviXY(int save_touch_x,int save_touch_y,int now_touch_x,int now_touch_y,int[] xy){
-			boolean positive_x = true,positive_y = true;
-			double sa_x = 0,sa_y = 0;
-			double ratio = 0;
 
+		// 指示マーカーの位置を取得
+		public void getIndicatorXY(int save_touch_x,int save_touch_y,int now_touch_x,int now_touch_y,int[] indicatorDiff,int[] indicatorXY){
+			// 移動方向の正、負
+			boolean positive_x = true,positive_y = true;
+			// セーブ位置と現在位置の絶対値差分
+			double sa_x,sa_y;
+			// 絶対値差分と表示位置の比率
+			double ratio;
+
+			// 移動方向の正、負を取得
 			if( save_touch_x > now_touch_x ){
 				positive_x = false;
 			}
@@ -161,38 +180,43 @@ public class GameActivity extends AppCompatActivity{
 				positive_y = false;
 			}
 
+			// セーブ位置と現在位置の絶対値差分を取得
 			sa_x = abs(save_touch_x - now_touch_x);
 			sa_y = abs(save_touch_y - now_touch_y);
 
+			//Log.w( "DEBUG_DATA", "save_touch_x " + save_touch_x  );
+			//Log.w( "DEBUG_DATA", "save_touch_y " + save_touch_y  );
+			//Log.w( "DEBUG_DATA", "now_touch_x " + now_touch_x  );
+			//Log.w( "DEBUG_DATA", "now_touch_y " + now_touch_y  );
 
-			Log.w( "DEBUG_DATA", "save_touch_x " + save_touch_x  );
-			Log.w( "DEBUG_DATA", "save_touch_y " + save_touch_y  );
-			Log.w( "DEBUG_DATA", "now_touch_x " + now_touch_x  );
-			Log.w( "DEBUG_DATA", "now_touch_y " + now_touch_y  );
+			//Log.w( "DEBUG_DATA", "sa_x " + sa_x  );
+			//Log.w( "DEBUG_DATA", "sa_y " + sa_y  );
 
-			Log.w( "DEBUG_DATA", "sa_x " + sa_x  );
-			Log.w( "DEBUG_DATA", "sa_y " + sa_y  );
+			// 三平方の定理で絶対値差分と表示位置の比率を取得
+			ratio = sqrt( pow(DIRECTION_RADIUS * 2,2) / ( pow(sa_x,2) + pow(sa_y,2) ) );
 
-			ratio = sqrt( pow(160,2) / ( pow(sa_x,2) + pow(sa_y,2) ) );
+			//Log.w( "DEBUG_DATA", "pow(160,2) " + pow(DIRECTION_RADIUS * 2,2)  );
+			//Log.w( "DEBUG_DATA", "pow(sa_x,2) " + pow(sa_x,2) );
+			//Log.w( "DEBUG_DATA", "pow(sa_y,2) " + pow(sa_y,2) );
+			//Log.w( "DEBUG_DATA", "ratio " + ratio  );
 
-			Log.w( "DEBUG_DATA", "pow(160,2) " + pow(160,2)  );
-			Log.w( "DEBUG_DATA", "pow(sa_x,2) " + pow(sa_x,2) );
-			Log.w( "DEBUG_DATA", "pow(sa_y,2) " + pow(sa_y,2) );
-			Log.w( "DEBUG_DATA", "ratio " + ratio  );
+			// 指示マーカーとセーブ位置の差分を取得（四捨五入のため誤差あり）
+			if( positive_x ) indicatorDiff[0] = (int)round(sa_x * ratio);
+			else indicatorDiff[0] = - (int)round(sa_x * ratio);
+			if( positive_y ) indicatorDiff[1] = (int)round(sa_y * ratio);
+			else indicatorDiff[1] = - (int)round(sa_y * ratio);
 
-			if( positive_x ) xy[0] = save_touch_x + (int)round(sa_x * ratio);
-			else xy[0] = save_touch_x - (int)round(sa_x * ratio);
+			// 四捨五入して指示マーカーの位置を取得
+			indicatorXY[0] = save_touch_x + indicatorDiff[0];
+			indicatorXY[1] = save_touch_y + indicatorDiff[1];
 
-			if( positive_y ) xy[1] = save_touch_y + (int)round(sa_y * ratio);
-			else xy[1] = save_touch_y - (int)round(sa_y * ratio);
+			//Log.w( "DEBUG_DATA", "(int)round(sa_x * ratio) " + (int)round(sa_x * ratio)  );
+			//Log.w( "DEBUG_DATA", "(int)round(sa_y * ratio) " + (int)round(sa_y * ratio)  );
 
-			Log.w( "DEBUG_DATA", "(int)round(sa_x * ratio) " + (int)round(sa_x * ratio)  );
-			Log.w( "DEBUG_DATA", "(int)round(sa_y * ratio) " + (int)round(sa_y * ratio)  );
+			//Log.w( "DEBUG_DATA", "indicatorXY[0] " + indicatorXY[0]  );
+			//Log.w( "DEBUG_DATA", "indicatorXY[1] " + indicatorXY[1]  );
 
-			Log.w( "DEBUG_DATA", "xy[0] " + xy[0]  );
-			Log.w( "DEBUG_DATA", "xy[1] " + xy[1]  );
-
-			Log.w( "DEBUG_DATA", "結果 " + ( pow(xy[0],2) + pow(xy[1],2) )  );
+			//Log.w( "DEBUG_DATA", "結果 " + ( pow(indicatorXY[0],2) + pow(indicatorXY[1],2) )  );
 
 		}
 
@@ -218,7 +242,7 @@ public class GameActivity extends AppCompatActivity{
 
 					paint.setStyle(Paint.Style.FILL);
 
-					Log.w( "DEBUG_DATA","DOWN" );
+					//Log.w( "DEBUG_DATA","DOWN" );
 					break;
 				case MotionEvent.ACTION_UP:
 
@@ -227,12 +251,10 @@ public class GameActivity extends AppCompatActivity{
 					break;
 			}
 
-			Log.w( "DEBUG_DATA", "tauch x " + now_touch_x );
-			Log.w( "DEBUG_DATA", "tauch y " + now_touch_y );
-
-			move_x+=speed;
-			move_y+=speed;
-
+			//Log.w( "DEBUG_DATA", "tauch x " + now_touch_x );
+			//Log.w( "DEBUG_DATA", "tauch y " + now_touch_y );
+			//move_x += 3;
+			//move_y += 3;
 			// 再描画の指示
 			invalidate();
 
