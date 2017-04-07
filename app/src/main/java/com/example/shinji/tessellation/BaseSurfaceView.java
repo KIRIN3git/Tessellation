@@ -26,6 +26,10 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
 	final static int SQUARE_NUM = 5;
 
+	// 色の塗りつぶし確認
+	int color_check[][];
+
+
 	// 矩形の一辺の長さ
 	final static int SQUARE_LENGTH = 100;
 
@@ -89,6 +93,8 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 		super(context);
 		surfaceHolder = getHolder();
 		surfaceHolder.addCallback(this);
+
+//		color_check = new int[SQUARE_NUM][SQUARE_NUM];
 	}
 
 	@Override public void run() {
@@ -135,7 +141,6 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 					//Log.w( "DEBUG_DATA", "move_y " + move_y );
 				}
 
-
 				// 基本グリッド
 				for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
 					for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
@@ -155,17 +160,12 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
 								paint);
 
-//						canvas.drawRect(
-//								center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i),
-//								center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j),
-//								center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i),
-//								center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j),
-//								paint);
-
-						if( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
+						//color_check[i][j] == 1 &&
+						// 枠内に中心点が入ったら
+						if( ( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
 								&& center_x < ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x
 								&& ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y < center_y
-								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y ){
+								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y ) ){
 
 							paint.setColor(Color.argb(255, 255, 0, 0));
 							paint.setStrokeWidth(8);
@@ -176,25 +176,9 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 									( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
 									( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
 									paint);
-
-							float a = ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x;
-							float b = ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y;
-							float c = ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x;
-							float d = ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y;
-
-							Log.w( "DEBUG_DATA", "center_x " + center_x );
-							Log.w( "DEBUG_DATA", "(SQUARE_LENGTH / 2) " + (SQUARE_LENGTH / 2) );
-							Log.w( "DEBUG_DATA", "(SQUARE_LENGTH * i) " + (SQUARE_LENGTH * i) );
-							Log.w( "DEBUG_DATA", "move_x " + move_x );
-
-							Log.w( "DEBUG_DATA", "( center_x - (SQUARE_LENGTH / 2) ) " + ( center_x - (SQUARE_LENGTH / 2) ) );
-							Log.w( "DEBUG_DATA", "( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) " + ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) );
-							Log.w( "DEBUG_DATA", "a " + a );
-							Log.w( "DEBUG_DATA", "b " + b );
-							Log.w( "DEBUG_DATA", "c " + c );
-							Log.w( "DEBUG_DATA", "d " + d );
+							// 色を記録
+//							color_check[i][j] = 1;
 						}
-
 					}
 				}
 
@@ -204,8 +188,6 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 				paint.setStyle(Paint.Style.FILL_AND_STROKE);
 // (x1,y1,r,paint) 中心x1座標, 中心y1座標, r半径
 				canvas.drawCircle(center_x, center_y, PLAYER_RADIUS, paint);
-
-
 
 				if( touch_flg ){
 					// セーブタップ位置に〇を表示
