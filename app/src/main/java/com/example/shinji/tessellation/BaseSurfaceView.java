@@ -23,21 +23,38 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	int r = 0,g = 0,b = 255;
 	int fill_x = -999,fill_y = -999;
 
-//	// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
-//	final static int SQUARE_NUM = 20;
-//
-//	// 矩形の一辺の長さ
-//	final static int SQUARE_LENGTH = 100;
-//
-//	// 移動マーカーの半径
-//	final static int DIRECTION_RADIUS = 80;
-	final static int SQUARE_NUM = 3;
+	// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
+	final static int SQUARE_NUM = 5;
 
 	// 矩形の一辺の長さ
-	final static int SQUARE_LENGTH = 50;
+	final static int SQUARE_LENGTH = 100;
 
 	// 移動マーカーの半径
-	final static int DIRECTION_RADIUS = 40;
+	final static int DIRECTION_RADIUS = 80;
+
+	// プレイヤーの半径
+	final static int PLAYER_RADIUS = 40;
+
+	// プレイヤーの半径
+	final static int PLAYER_SPEED = 10;
+
+	// プレイヤーの色
+	final static int PLAYER_R = 44;
+	final static int PLAYER_G = 45;
+	final static int PLAYER_B = 21;
+
+	// Base図形RGB
+	final static int BASE_R = 188;
+	final static int BASE_G = 189;
+	final static int BASE_B = 194;
+
+//	final static int SQUARE_NUM = 3;
+//
+//	// 矩形の一辺の長さ
+//	final static int SQUARE_LENGTH = 50;
+//
+//	// 移動マーカーの半径
+//	final static int DIRECTION_RADIUS = 40;
 
 	// Canvas 中心点
 	float center_x = 0.0f;
@@ -107,61 +124,88 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 				center_x = canvas.getWidth()/2;
 				center_y = canvas.getHeight()/2;
 
-
-
 				if( touch_flg ){
 					// タップ移動比率xyと指示マーカーのxyを取得
 					getIndicatorXY(save_touch_x, save_touch_y, now_touch_x, now_touch_y, indicatorDiff, indicatorXY);
 					//Log.w( "DEBUG_DATA", "indicatorDiff[0] " + indicatorDiff[0] );
 					//Log.w( "DEBUG_DATA", "indicatorDiff[1] " + indicatorDiff[1] );
-					move_x = move_x - (indicatorDiff[0] / 3);
-					move_y = move_y - (indicatorDiff[1] / 3);
+					move_x = move_x - (indicatorDiff[0] / PLAYER_SPEED);
+					move_y = move_y - (indicatorDiff[1] / PLAYER_SPEED);
 					//Log.w( "DEBUG_DATA", "move_x " + move_x );
 					//Log.w( "DEBUG_DATA", "move_y " + move_y );
 				}
-
-				// 矩形
-				if( fill_x != -999 && fill_y != -999 ){
-
-
-					paint.setColor(Color.argb(255, r, g, b));
-					paint.setStrokeWidth(4);
-					paint.setStyle(Paint.Style.FILL);
-					i = fill_x;
-					j = fill_y;
-
-
-					canvas.drawRect(
-							center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
-							center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
-							center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
-							center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
-							paint);
-				}
-				paint.setColor(Color.argb(255, 0, 0, 255));
-				paint.setStrokeWidth(4);
-				paint.setStyle(Paint.Style.STROKE);
 
 
 				// 基本グリッド
 				for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
 					for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
+
+
+
+						paint.setColor(Color.argb(255, BASE_R, BASE_G, BASE_B));
+						paint.setStrokeWidth(8);
+						paint.setStyle(Paint.Style.STROKE);
+
 						// 縦横に10個ずつ
 						// (x1,y1,x2,y2,paint) 左上の座標(x1,y1), 右下の座標(x2,y2)
 						canvas.drawRect(
-								center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
-								center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
-								center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i) + move_x,
-								center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j) + move_y,
+								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
 								paint);
+
 //						canvas.drawRect(
 //								center_x - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i),
 //								center_y - (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j),
 //								center_x + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * i),
 //								center_y + (SQUARE_LENGTH / 2) + (SQUARE_LENGTH * j),
 //								paint);
+
+						if( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
+								&& center_x < ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x
+								&& ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y < center_y
+								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y ){
+
+							paint.setColor(Color.argb(255, 255, 0, 0));
+							paint.setStrokeWidth(8);
+							paint.setStyle(Paint.Style.FILL);
+							canvas.drawRect(
+									( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+									( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+									( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+									( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+									paint);
+
+							float a = ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x;
+							float b = ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y;
+							float c = ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x;
+							float d = ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y;
+
+							Log.w( "DEBUG_DATA", "center_x " + center_x );
+							Log.w( "DEBUG_DATA", "(SQUARE_LENGTH / 2) " + (SQUARE_LENGTH / 2) );
+							Log.w( "DEBUG_DATA", "(SQUARE_LENGTH * i) " + (SQUARE_LENGTH * i) );
+							Log.w( "DEBUG_DATA", "move_x " + move_x );
+
+							Log.w( "DEBUG_DATA", "( center_x - (SQUARE_LENGTH / 2) ) " + ( center_x - (SQUARE_LENGTH / 2) ) );
+							Log.w( "DEBUG_DATA", "( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) " + ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) );
+							Log.w( "DEBUG_DATA", "a " + a );
+							Log.w( "DEBUG_DATA", "b " + b );
+							Log.w( "DEBUG_DATA", "c " + c );
+							Log.w( "DEBUG_DATA", "d " + d );
+						}
+
 					}
 				}
+
+				// 中心円の表示
+				paint.setColor(Color.argb(255, 0, 0, 255));
+				paint.setAntiAlias(true);
+				paint.setStyle(Paint.Style.FILL_AND_STROKE);
+// (x1,y1,r,paint) 中心x1座標, 中心y1座標, r半径
+				canvas.drawCircle(center_x, center_y, PLAYER_RADIUS, paint);
+
+
 
 				if( touch_flg ){
 					// セーブタップ位置に〇を表示
