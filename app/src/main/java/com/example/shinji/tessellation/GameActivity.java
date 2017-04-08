@@ -70,7 +70,6 @@ public class GameActivity extends AppCompatActivity{
 
 		@Override
 		protected void onDraw(Canvas canvas) {
-
 			int i,j;
 
 			// セーブ位置と指示器の差分
