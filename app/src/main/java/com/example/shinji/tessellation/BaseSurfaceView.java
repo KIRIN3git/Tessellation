@@ -25,22 +25,26 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 
 	// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
 	final static int SQUARE_NUM = 5;
-
+	final static int SQUARE_AB_NUM = SQUARE_NUM * 2;
 	// 色の塗りつぶし確認
 	int color_check[][];
 
+	// ひとつ前の塗りつぶし座標
+	int before_check_a = -1;
+	int before_check_b = -1;
 
 	// 矩形の一辺の長さ
-	final static int SQUARE_LENGTH = 100;
-
+//	final static int SQUARE_LENGTH = 100;
+	final static int SQUARE_LENGTH = 50;
 	// 移動マーカーの半径
-	final static int DIRECTION_RADIUS = 80;
-
+//	final static int DIRECTION_RADIUS = 80;
+	final static int DIRECTION_RADIUS = 40;
 	// プレイヤーの半径
-	final static int PLAYER_RADIUS = 40;
-
-	// プレイヤーの半径
-	final static int PLAYER_SPEED = 10;
+//	final static int PLAYER_RADIUS = 40;
+	final static int PLAYER_RADIUS = 20;
+	// プレイヤーのスピード
+//	final static int PLAYER_SPEED = 10;
+	final static int PLAYER_SPEED = 5;
 
 	// プレイヤーの色
 	final static int PLAYER_R = 44;
@@ -94,7 +98,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 		surfaceHolder = getHolder();
 		surfaceHolder.addCallback(this);
 
-//		color_check = new int[SQUARE_NUM][SQUARE_NUM];
+		color_check = new int[SQUARE_NUM*2+1][SQUARE_NUM*2+1];
 	}
 
 	@Override public void run() {
@@ -118,6 +122,9 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 		long loopCount = 0;
 		long waitTime = 0;
 		long startTime = System.currentTimeMillis();
+
+		// ポイントが閉じたかのフラグ
+		boolean close_flg;
 
 		while(thread != null){
 			try{
@@ -145,8 +152,6 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 				for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
 					for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
 
-
-
 						paint.setColor(Color.argb(255, BASE_R, BASE_G, BASE_B));
 						paint.setStrokeWidth(8);
 						paint.setStyle(Paint.Style.STROKE);
@@ -162,7 +167,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 
 						//color_check[i][j] == 1 &&
 						// 枠内に中心点が入ったら
-						if( ( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
+						if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] == 1 || ( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
 								&& center_x < ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x
 								&& ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y < center_y
 								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y ) ){
@@ -176,8 +181,23 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 									( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
 									( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
 									paint);
-							// 色を記録
-//							color_check[i][j] = 1;
+
+							// 未マークポジションなら
+							if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] != 1 ){
+								// 色を記録
+								color_check[i+SQUARE_NUM][j+SQUARE_NUM] = 1;
+
+								CheckClose(i+SQUARE_NUM,j+SQUARE_NUM,canvas);
+
+
+								before_check_a = i+SQUARE_NUM;
+								before_check_b = j+SQUARE_NUM;
+
+							}
+
+
+
+
 						}
 					}
 				}
@@ -228,6 +248,187 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 			} catch(Exception e){}
 		}
 	}
+
+	public void CheckClose(int a,int b,Canvas canvas){
+
+		boolean tojita_flg = false;
+		// 前の塗りつぶしがなければエラー
+		if( before_check_a == -1 || before_check_b == -1 ) return;
+
+
+
+
+		Log.w( "DEBUG_DATA2", "a " + a );
+		Log.w( "DEBUG_DATA2", "b " + b );
+		Log.w( "DEBUG_DATA2", "before_check_a " + before_check_a );
+		Log.w( "DEBUG_DATA2", "before_check_b " + before_check_b );
+
+		// PLAYARが上端じゃなくて、上のマスがBEFOREじゃなく埋まっていたら、閉じた可能性あり
+		if( a != 0 ){
+			Log.w( "DEBUG_DATA2", "color_check[a-1][b] " + color_check[a-1][b] );
+			if( color_check[a-1][b] == 1 && !( a-1 == before_check_a && b == before_check_b ) ){
+				tojita_flg = true;
+
+				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE1"  );
+			}
+		}
+		if( b != 0 ){
+			Log.w( "DEBUG_DATA2", "color_check[a][b-1] " + color_check[a][b-1] );
+			if( color_check[a][b-1] == 1 && !( a == before_check_a && b-1 == before_check_b ) ){
+				tojita_flg = true;
+
+				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE2"  );
+			}
+		}
+		if( a != SQUARE_AB_NUM ){
+			Log.w( "DEBUG_DATA2", "color_check[a+1][b] " + color_check[a+1][b] );
+			if( color_check[a+1][b] == 1 && !( a+1 == before_check_a && b == before_check_b ) ){
+				tojita_flg = true;
+
+				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE3"  );
+			}
+		}
+		if( b != SQUARE_AB_NUM ){
+			Log.w( "DEBUG_DATA2", "color_check[a][b+1] " + color_check[a][b+1] );
+			if( color_check[a][b+1] == 1 && !( a == before_check_a && b+1 == before_check_b ) ){
+				tojita_flg = true;
+
+				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE4"  );
+			}
+		}
+
+		if(!tojita_flg) return;
+
+		boolean kanzenni_tojita = false;
+		// 左が開いていたら、閉じているか確認
+		if( a != 0 && color_check[a-1][b] == 0 ) {
+			color_check[a-1][b] = 2;
+			Log.w( "DEBUG_DATA333", "I AM 2 a" + a  );
+			Log.w( "DEBUG_DATA333", "I AM 2 b" + b  );
+			// 完全に閉じているかチェック、閉じてる範囲を3に書き換え
+			kanzenni_tojita = ZanteiCheck(a-1,b);
+
+			Log.w( "DEBUG_DATA", "kanzenni_tojita　" + kanzenni_tojita);
+			SetColorDesu(kanzenni_tojita,canvas);
+
+
+
+
+		}
+
+	}
+
+
+	public void SetColorDesu(boolean mode,Canvas canvas){
+
+		int i;
+		int j;
+
+		Log.w( "DEBUG_DATA", "");
+
+		Paint paint = new Paint();
+
+		for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
+			for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
+Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+SQUARE_NUM][j+SQUARE_NUM] );
+				if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] == 3 ){
+					if( mode == true){
+						Log.w( "DEBUG_DATA33", "i " + i);
+						Log.w( "DEBUG_DATA33", "j " + j);
+
+						paint.setColor(Color.argb(255, 255, 0, 0));
+						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa1");
+						paint.setStrokeWidth(8);
+						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa2");
+						paint.setStyle(Paint.Style.FILL);
+						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa3 center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x " + (center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x);
+						canvas.drawRect(
+								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
+								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+								paint);
+
+						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa4");
+
+					}
+					// 0に戻しておく
+					else{
+						color_check[i+SQUARE_NUM][j+SQUARE_NUM] = 0;
+					}
+				}
+
+			}
+		}
+	}
+
+
+	public boolean ZanteiCheck(int check_a,int check_b){
+		Log.w( "DEBUG_DATA3", "ZanteiCheck");
+		boolean roop_flg = true;
+		boolean kanzenni_tojiteru = true;
+		boolean kensaku_taisyou_mada_ari_flg = false;
+		boolean dassyutu_flg = false;
+		int a,b;
+		while(roop_flg){
+			roop_flg = false;
+			Log.w( "DEBUG_DATA3", "ROOP");
+			for( a = 0; a <= SQUARE_AB_NUM; a++ ) {
+				for (b = 0; b <= SQUARE_AB_NUM; b++) {
+					Log.w( "DEBUG_DATA3", "a " + a);
+					Log.w( "DEBUG_DATA3", "b " + b);
+					if( color_check[a][b] == 2 ){
+						roop_flg = true;
+						Log.w( "DEBUG_DATA3", "TOOTTAAAA");
+						kensaku_taisyou_mada_ari_flg = true;
+						// 検索対象の左が0番だったら検索対象に追加
+						if( a != 0 ){
+							Log.w( "DEBUG_DATA3", "1");
+							if( color_check[a-1][b] == 0 ) color_check[a-1][b] = 2;
+						}
+						if( b != 0 ){
+							Log.w( "DEBUG_DATA3", "2");
+							if( color_check[a][b-1] == 0 ) color_check[a][b-1] = 2;
+						}
+						if( a != SQUARE_AB_NUM ){
+							Log.w( "DEBUG_DATA3", "3");
+							if( color_check[a+1][b] == 0 ) color_check[a+1][b] = 2;
+						}
+						if( b != SQUARE_AB_NUM ){
+							Log.w( "DEBUG_DATA3", "4");
+							if( color_check[a][b+1] == 0 ) color_check[a][b+1] = 2;
+						}
+						// チェック済み
+						Log.w( "DEBUG_DATA3", "I AM 3 a" + a);
+						Log.w( "DEBUG_DATA3", "I AM 3 b" + b);
+						color_check[a][b] = 3;
+						Log.w( "DEBUG_DATA3", "aaa1");
+
+						// 検索対象が画面端に来たら、囲まれていない
+						if( a == 0 || b == 0 || a == SQUARE_AB_NUM || b == SQUARE_AB_NUM ){
+							Log.w( "DEBUG_DATA3", "ERRRRRRRRRRRRRRRRRRRRRR");
+							roop_flg = false;
+							kanzenni_tojiteru = false;
+							dassyutu_flg = true;
+							break;
+						}
+						Log.w( "DEBUG_DATA3", "aaa2");
+					}
+				}
+				if(dassyutu_flg) break;
+			}
+			Log.w( "DEBUG_DATA3", "aaa3");
+			// もう検索対象なし、囲まれていた
+			if(kanzenni_tojiteru && kensaku_taisyou_mada_ari_flg == false){
+				Log.w( "DEBUG_DATA3", "OKKKKKKKKKKKKKKKKKKKKKKKK");
+				roop_flg = false;
+			}
+			Log.w( "DEBUG_DATA3", "aaa4");
+		}
+
+		return kanzenni_tojiteru;
+	}
+
 
 	// タッチイベントを処理するためOverrideする
 	@Override
