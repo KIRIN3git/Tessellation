@@ -24,7 +24,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	int fill_x = -999,fill_y = -999;
 
 	// 四角の縦、横の数
-	final static int SQUARE_NUM = 5;
+	final static int SQUARE_NUM = 21;
 	// 色の塗りつぶし確認
 	int square_color[][];
 
@@ -60,7 +60,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	final static int PLAYER_RADIUS = 20;
 	// プレイヤーのスピード
 //	final static int PLAYER_SPEED = 10;
-	final static int PLAYER_SPEED = 5;
+	final static int PLAYER_SPEED = 10;
 
 	// プレイヤーの色
 	final static int PLAYER_R = 44;
@@ -175,7 +175,6 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 								before_fill_i = i;
 								before_fill_j = j;
 
-								Log.w( "DEBUG_DATA2", "aaaaaaaaaaaaaaaa ");
 							}
 						}
 					}
@@ -232,64 +231,64 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 		// 前の塗りつぶしがなければエラー
 		if( before_fill_i == -1 || before_fill_j == -1 ) return;
 
-		Log.w( "DEBUG_DATA2", "i " + i );
-		Log.w( "DEBUG_DATA2", "j " + j );
-		Log.w( "DEBUG_DATA2", "before_fill_i " + before_fill_i );
-		Log.w( "DEBUG_DATA2", "before_fill_j " + before_fill_j );
+		Log.w( "CheckCloseAndFill", "i " + i );
+		Log.w( "CheckCloseAndFill", "j " + j );
+		Log.w( "CheckCloseAndFill", "before_fill_i " + before_fill_i );
+		Log.w( "CheckCloseAndFill", "before_fill_j " + before_fill_j );
 
 		// PLAYARが上端じゃなくて、上のマスがBEFOREじゃなく埋まっていたら、閉じた可能性あり
 		if( i != 0 ){
-			Log.w( "DEBUG_DATA2", "square_color[i-1][j] " + square_color[i-1][j] );
+			Log.w( "CheckCloseAndFill", "square_color[i-1][j] " + square_color[i-1][j] );
 			if( square_color[i-1][j] == 1 && !( i-1 == before_fill_i && j == before_fill_j ) ){
 				tabun_close_flg = true;
 
-				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE1"  );
+				Log.w( "CheckCloseAndFill", "TRUEEEEEEEEEE1"  );
 			}
-			Log.w( "DEBUG_DATA2", "square_color[i-1][j] " + square_color[i-1][j] );
+			Log.w( "CheckCloseAndFill", "square_color[i-1][j] " + square_color[i-1][j] );
 		}
 		if( j != 0 ){
-			Log.w( "DEBUG_DATA2", "square_color[i][j-1] " + square_color[i][j-1] );
+			Log.w( "CheckCloseAndFill", "square_color[i][j-1] " + square_color[i][j-1] );
 			if( square_color[i][j-1] == 1 && !( i == before_fill_i && j-1 == before_fill_j ) ){
 				tabun_close_flg = true;
 
-				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE2"  );
+				Log.w( "CheckCloseAndFill", "TRUEEEEEEEEEE2"  );
 			}
-			Log.w( "DEBUG_DATA2", "square_color[i][j-1] " + square_color[i][j-1] );
+			Log.w( "CheckCloseAndFill", "square_color[i][j-1] " + square_color[i][j-1] );
 		}
 		if( i != SQUARE_NUM - 1 ){
-			Log.w( "DEBUG_DATA2", "square_color[i+1][j] " + square_color[i+1][j] );
+			Log.w( "CheckCloseAndFill", "square_color[i+1][j] " + square_color[i+1][j] );
 			if( square_color[i+1][j] == 1 && !( i+1 == before_fill_i && j == before_fill_j ) ){
 				tabun_close_flg = true;
 
-				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE3"  );
+				Log.w( "CheckCloseAndFill", "TRUEEEEEEEEEE3"  );
 			}
-			Log.w( "DEBUG_DATA2", "square_color[i+1][j] " + square_color[i+1][j] );
+			Log.w( "CheckCloseAndFill", "square_color[i+1][j] " + square_color[i+1][j] );
 		}
 		if( j != SQUARE_NUM - 1 ){
-			Log.w( "DEBUG_DATA2", "square_color[i][j+1] " + square_color[i][j+1] );
+			Log.w( "CheckCloseAndFill", "square_color[i][j+1] " + square_color[i][j+1] );
 			if( square_color[i][j+1] == 1 && !( i == before_fill_i && j+1 == before_fill_j ) ){
 				tabun_close_flg = true;
 
-				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE4"  );
+				Log.w( "CheckCloseAndFill", "TRUEEEEEEEEEE4"  );
 			}
-			Log.w( "DEBUG_DATA2", "square_color[i][j+1] " + square_color[i][j+1] );
+			Log.w( "CheckCloseAndFill", "square_color[i][j+1] " + square_color[i][j+1] );
 		}
 
-		Log.w( "DEBUG_DATA2", "ssssssssssssssssssss1 " );
+		Log.w( "CheckCloseAndFill", "ssssssssssssssssssss1 " );
 
 		if(!tabun_close_flg) return;
 
-		Log.w( "DEBUG_DATA2", "ssssssssssssssssssss2 " );
+		Log.w( "CheckCloseAndFill", "ssssssssssssssssssss2 " );
 
 		// 左が開いていたら、閉じているか確認
 		if( i != 0 && square_color[i-1][j] == 0 ) {
 			square_color[i-1][j] = 2;
-			Log.w( "DEBUG_DATA333", "I AM 2 i" + i  );
-			Log.w( "DEBUG_DATA333", "I AM 2 j" + j  );
+			Log.w( "CheckCloseAndFill", "I AM 2 i" + i  );
+			Log.w( "CheckCloseAndFill", "I AM 2 j" + j  );
 			// 完全に閉じているかチェック、閉じてる範囲を3に書き換え
 			kakujituni_close_flg = CheckCloseComp(i-1,j);
 
-			Log.w( "DEBUG_DATA", "kanzenni_tojita　" + kakujituni_close_flg);
+			Log.w( "CheckCloseAndFill", "kanzenni_tojita　" + kakujituni_close_flg);
 			// 閉じられているところを塗る
 			FillClose(kakujituni_close_flg,canvas);
 		}
@@ -299,70 +298,74 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 
 	// 完全に閉じらているか確認し、３番をセットする
 	public boolean CheckCloseComp(int check_i,int check_j){
-		Log.w( "DEBUG_DATA3", "CheckCloseFull");
+		Log.w( "CheckCloseComp", "CheckCloseFull");
 		// ループフラグ
 		boolean roop_flg = true;
-		// 検索中フラグ
-		boolean kensakucyu_flg = false;
+		// 停止フラグ
+		boolean stop_flg = true;
 		// コンプリートフラグ
 		boolean comp_flg = false;
+		// 検索対象データが１つでもあったフラグ
+		boolean data_flg = false;
+
 
 		int i,j;
 
 		while(roop_flg){
-			Log.w( "DEBUG_DATA3", "ROOP");
+			Log.w( "CheckCloseComp", "ROOP");
+
+			data_flg = false;
 			for( i = 0; i < SQUARE_NUM; i++ ) {
 				for (j = 0; j < SQUARE_NUM; j++) {
-					Log.w( "DEBUG_DATA3", "i " + i);
-					Log.w( "DEBUG_DATA3", "j " + j);
+					Log.w( "CheckCloseComp", "i " + i);
+					Log.w( "CheckCloseComp", "j " + j);
 					if( square_color[i][j] == 2 ){
 						//１個でも2があれば、再検索するよ
-						roop_flg = true;
-						kensakucyu_flg = true;
 						comp_flg = true;
+						data_flg = true;
 
-						Log.w( "DEBUG_DATA3", "TOOTTAAAA");
+						Log.w( "CheckCloseComp", "TOOTTAAAA");
 
 						// 検索対象の左が0番だったら検索対象に追加
 						if( i != 0 ){
-							Log.w( "DEBUG_DATA3", "1");
+							Log.w( "CheckCloseComp", "1");
 							if( square_color[i-1][j] == 0 ) square_color[i-1][j] = 2;
 						}
 						if( j != 0 ){
-							Log.w( "DEBUG_DATA3", "2");
+							Log.w( "CheckCloseComp", "2");
 							if( square_color[i][j-1] == 0 ) square_color[i][j-1] = 2;
 						}
 						if( i != ( SQUARE_NUM - 1 ) ){
-							Log.w( "DEBUG_DATA3", "3");
+							Log.w( "CheckCloseComp", "3");
 							if( square_color[i+1][j] == 0 ) square_color[i+1][j] = 2;
 						}
 						if( j != ( SQUARE_NUM - 1 ) ){
-							Log.w( "DEBUG_DATA3", "4");
+							Log.w( "CheckCloseComp", "4");
 							if( square_color[i][j+1] == 0 ) square_color[i][j+1] = 2;
 						}
 						// チェック済み
-						Log.w( "DEBUG_DATA3", "I AM 3 i" + i);
-						Log.w( "DEBUG_DATA3", "I AM 3 j" + j);
+						Log.w( "CheckCloseComp", "I AM 3 i" + i);
+						Log.w( "CheckCloseComp", "I AM 3 j" + j);
 						square_color[i][j] = 3;
-						Log.w( "DEBUG_DATA3", "aaa1");
+						Log.w( "CheckCloseComp", "aaa1");
 
 						// 検索対象が画面端に来たら、囲まれていない
 						if( i == 0 || j == 0 || i == ( SQUARE_NUM - 1 ) || j == ( SQUARE_NUM - 1 ) ){
-							Log.w( "DEBUG_DATA3", "ERRRRRRRRRRRRRRRRRRRRRR");
+							Log.w( "CheckCloseComp", "ERRRRRRRRRRRRRRRRRRRRRR");
 							roop_flg = false;
-							kensakucyu_flg = false;
+							stop_flg = false;
 							comp_flg = false;
 
 							break;
 						}
-						Log.w( "DEBUG_DATA3", "aaa2");
+						Log.w( "CheckCloseComp", "aaa2");
 					}
 				}
-				if(!kensakucyu_flg) break;
+				if(!stop_flg) break;
 			}
-			Log.w( "DEBUG_DATA3", "aaa3");
+			Log.w( "CheckCloseComp", "aaa3");
 
-			if( !kensakucyu_flg ){
+			if( !data_flg || !stop_flg ){
 				roop_flg = false;
 			}
 
@@ -376,7 +379,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 
 		int i,j;
 
-		Log.w( "DEBUG_DATA", "");
+		Log.w( "FillClose", "");
 
 		Paint paint = new Paint();
 
@@ -384,15 +387,15 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 			for( j = 0; j < SQUARE_NUM; j++ ){
 				if( square_color[i][j] == 3 ){
 					if( mode == true){
-						Log.w( "DEBUG_DATA33", "i " + i);
-						Log.w( "DEBUG_DATA33", "j " + j);
+						Log.w( "FillClose", "i " + i);
+						Log.w( "FillClose", "j " + j);
 
 						paint.setColor(Color.argb(255, 255, 0, 0));
-						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa1");
+						Log.w( "FillClose", "aaaaaaaaaaaaaaaaaa1");
 						paint.setStrokeWidth(8);
-						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa2");
+						Log.w( "FillClose", "aaaaaaaaaaaaaaaaaa2");
 						paint.setStyle(Paint.Style.FILL);
-						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa3 center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x " + (center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x);
+						Log.w( "FillClose", "aaaaaaaaaaaaaaaaaa3 center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x " + (center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x);
 						canvas.drawRect(
 								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
 								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
@@ -400,7 +403,10 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
 								paint);
 
-						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa4");
+						// 色を記録
+						square_color[i][j] = 1;
+
+						Log.w( "FillClose", "aaaaaaaaaaaaaaaaaa4");
 
 					}
 					// 0に戻しておく
@@ -408,7 +414,6 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 						square_color[i][j] = 0;
 					}
 				}
-
 			}
 		}
 	}
