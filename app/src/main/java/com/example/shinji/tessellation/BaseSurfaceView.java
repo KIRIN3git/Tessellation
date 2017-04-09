@@ -23,15 +23,31 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	int r = 0,g = 0,b = 255;
 	int fill_x = -999,fill_y = -999;
 
-	// 矩形の上下左右の数（総数は SQUARE_NUM * 2 + 1の2乗）
+	// 四角の縦、横の数
 	final static int SQUARE_NUM = 5;
-	final static int SQUARE_AB_NUM = SQUARE_NUM * 2;
 	// 色の塗りつぶし確認
-	int color_check[][];
+	int square_color[][];
 
-	// ひとつ前の塗りつぶし座標
-	int before_check_a = -1;
-	int before_check_b = -1;
+	// スクリーンの大きさ
+	int screen_width, screen_height;
+
+	// 現在タッチしている位置
+	int now_touch_x = 0,now_touch_y = 0;
+
+	// セーブしたタッチ位置
+	int save_touch_x = 0,save_touch_y = 0;
+
+	// Canvas 中心点
+	float center_x = 0.0f;
+	float center_y = 0.0f;
+
+	// 全体の移動位置
+	int move_x = 0,move_y = 0;
+
+	// Base図形RGB
+	final static int BASE_R = 188;
+	final static int BASE_G = 189;
+	final static int BASE_B = 194;
 
 	// 矩形の一辺の長さ
 //	final static int SQUARE_LENGTH = 100;
@@ -51,85 +67,49 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 	final static int PLAYER_G = 45;
 	final static int PLAYER_B = 21;
 
-	// Base図形RGB
-	final static int BASE_R = 188;
-	final static int BASE_G = 189;
-	final static int BASE_B = 194;
+	// ひとつ前の塗りつぶし座標
+	int before_fill_i = -1;
+	int before_fill_j = -1;
 
-//	final static int SQUARE_NUM = 3;
-//
-//	// 矩形の一辺の長さ
-//	final static int SQUARE_LENGTH = 50;
-//
-//	// 移動マーカーの半径
-//	final static int DIRECTION_RADIUS = 40;
 
-	// Canvas 中心点
-	float center_x = 0.0f;
-	float center_y = 0.0f;
-
-	// オブジェクトの移動位置
-	int move_x = 0,move_y = 0;
-
-	// 現在タッチしている位置
-	int now_touch_x = 0,now_touch_y = 0;
-
-	// セーブしたタッチ位置
-	int save_touch_x = 0,save_touch_y = 0;
-
-	// 初回表示フラグ
-	boolean initial_flg = true;
 	// 現在タッチ中かのフラグ
 	boolean touch_flg = false;
-	// オブジェクトの移動速度
-	int speed = 4;
-	Paint paint;
 
-	static final long FPS = 20;
-	static final long FRAME_TIME = 1000 / FPS;
-	static final int BALL_R = 30;
 	SurfaceHolder surfaceHolder;
 	Thread thread;
-	int cx = BALL_R, cy = BALL_R;
-	int screen_width, screen_height;
+
+
 
 	public BaseSurfaceView(Context context){
 		super(context);
 		surfaceHolder = getHolder();
 		surfaceHolder.addCallback(this);
 
-		color_check = new int[SQUARE_NUM*2+1][SQUARE_NUM*2+1];
+		square_color = new int[SQUARE_NUM][SQUARE_NUM];
 	}
 
 	@Override public void run() {
 
+		// グリッドの位置
 		int i,j;
 
 		// セーブ位置と指示器の差分
 		int indicatorDiff[] = {0,0};
 
-		// 指示器の位置
+		// 指示器のXY位置
 		int indicatorXY[] = {0,0};
 
+		// キャンバスを設定
+		Canvas canvas;
 
-		Canvas canvas = null;
+		// ペイントを設定
 		Paint paint = new Paint();
 		Paint bgPaint = new Paint();
-// Background bgPaint.setStyle(Style.FILL);
 		bgPaint.setColor(Color.WHITE);
-// Ball paint.setStyle(Style.FILL);
-		paint.setColor(Color.BLUE);
-		long loopCount = 0;
-		long waitTime = 0;
-		long startTime = System.currentTimeMillis();
-
-		// ポイントが閉じたかのフラグ
-		boolean close_flg;
 
 		while(thread != null){
 			try{
 
-				loopCount++;
 				canvas = surfaceHolder.lockCanvas();
 				canvas.drawRect( 0, 0, screen_width, screen_height, bgPaint);
 
@@ -149,8 +129,8 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 				}
 
 				// 基本グリッド
-				for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
-					for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
+				for( i = 0; i < SQUARE_NUM; i++ ){
+					for( j = 0; j < SQUARE_NUM; j++ ){
 
 						paint.setColor(Color.argb(255, BASE_R, BASE_G, BASE_B));
 						paint.setStrokeWidth(8);
@@ -159,45 +139,44 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 						// 縦横に10個ずつ
 						// (x1,y1,x2,y2,paint) 左上の座標(x1,y1), 右下の座標(x2,y2)
 						canvas.drawRect(
-								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
-								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
+								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
 								paint);
 
-						//color_check[i][j] == 1 &&
-						// 枠内に中心点が入ったら
-						if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] == 1 || ( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x < center_x
-								&& center_x < ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x
-								&& ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y < center_y
-								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y ) ){
 
+						// すでにペイント済み、枠内に中心点が入ったら
+						if( square_color[i][j] == 1
+								|| ( ( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x < center_x
+								&& center_x < ( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x
+								&& ( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y < center_y
+								&& center_y < ( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y ) ){
+
+							// 色を塗る
 							paint.setColor(Color.argb(255, 255, 0, 0));
 							paint.setStrokeWidth(8);
 							paint.setStyle(Paint.Style.FILL);
 							canvas.drawRect(
-									( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-									( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
-									( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-									( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+									( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+									( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
+									( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+									( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
 									paint);
 
-							// 未マークポジションなら
-							if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] != 1 ){
+							// 新規塗りだったら
+							if( square_color[i][j] != 1 ){
 								// 色を記録
-								color_check[i+SQUARE_NUM][j+SQUARE_NUM] = 1;
+								square_color[i][j] = 1;
 
-								CheckClose(i+SQUARE_NUM,j+SQUARE_NUM,canvas);
+								// 囲まれていたら色を塗る
+								CheckCloseAndFill(i,j,canvas);
 
+								before_fill_i = i;
+								before_fill_j = j;
 
-								before_check_a = i+SQUARE_NUM;
-								before_check_b = j+SQUARE_NUM;
-
+								Log.w( "DEBUG_DATA2", "aaaaaaaaaaaaaaaa ");
 							}
-
-
-
-
 						}
 					}
 				}
@@ -206,7 +185,7 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 				paint.setColor(Color.argb(255, 0, 0, 255));
 				paint.setAntiAlias(true);
 				paint.setStyle(Paint.Style.FILL_AND_STROKE);
-// (x1,y1,r,paint) 中心x1座標, 中心y1座標, r半径
+				// (x1,y1,r,paint) 中心x1座標, 中心y1座標, r半径
 				canvas.drawCircle(center_x, center_y, PLAYER_RADIUS, paint);
 
 				if( touch_flg ){
@@ -238,100 +217,172 @@ public class BaseSurfaceView extends SurfaceView implements  Runnable,SurfaceHol
 					//Log.w( "DEBUG_DATA", "CENTER direXY[1] " + indicatorXY[1] );
 				}
 
+				// 描画
 				surfaceHolder.unlockCanvasAndPost(canvas);
 
-
-//				waitTime = (loopCount * FRAME_TIME) - (System.currentTimeMillis() - startTime);
-//				if( waitTime > 0 ){
-//					Thread.sleep(waitTime);
-//				}
 			} catch(Exception e){}
 		}
 	}
 
-	public void CheckClose(int a,int b,Canvas canvas){
+	public void CheckCloseAndFill(int i,int j,Canvas canvas){
 
-		boolean tojita_flg = false;
+		boolean tabun_close_flg = false;
+		boolean kakujituni_close_flg = false;
+
 		// 前の塗りつぶしがなければエラー
-		if( before_check_a == -1 || before_check_b == -1 ) return;
+		if( before_fill_i == -1 || before_fill_j == -1 ) return;
 
-
-
-
-		Log.w( "DEBUG_DATA2", "a " + a );
-		Log.w( "DEBUG_DATA2", "b " + b );
-		Log.w( "DEBUG_DATA2", "before_check_a " + before_check_a );
-		Log.w( "DEBUG_DATA2", "before_check_b " + before_check_b );
+		Log.w( "DEBUG_DATA2", "i " + i );
+		Log.w( "DEBUG_DATA2", "j " + j );
+		Log.w( "DEBUG_DATA2", "before_fill_i " + before_fill_i );
+		Log.w( "DEBUG_DATA2", "before_fill_j " + before_fill_j );
 
 		// PLAYARが上端じゃなくて、上のマスがBEFOREじゃなく埋まっていたら、閉じた可能性あり
-		if( a != 0 ){
-			Log.w( "DEBUG_DATA2", "color_check[a-1][b] " + color_check[a-1][b] );
-			if( color_check[a-1][b] == 1 && !( a-1 == before_check_a && b == before_check_b ) ){
-				tojita_flg = true;
+		if( i != 0 ){
+			Log.w( "DEBUG_DATA2", "square_color[i-1][j] " + square_color[i-1][j] );
+			if( square_color[i-1][j] == 1 && !( i-1 == before_fill_i && j == before_fill_j ) ){
+				tabun_close_flg = true;
 
 				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE1"  );
 			}
+			Log.w( "DEBUG_DATA2", "square_color[i-1][j] " + square_color[i-1][j] );
 		}
-		if( b != 0 ){
-			Log.w( "DEBUG_DATA2", "color_check[a][b-1] " + color_check[a][b-1] );
-			if( color_check[a][b-1] == 1 && !( a == before_check_a && b-1 == before_check_b ) ){
-				tojita_flg = true;
+		if( j != 0 ){
+			Log.w( "DEBUG_DATA2", "square_color[i][j-1] " + square_color[i][j-1] );
+			if( square_color[i][j-1] == 1 && !( i == before_fill_i && j-1 == before_fill_j ) ){
+				tabun_close_flg = true;
 
 				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE2"  );
 			}
+			Log.w( "DEBUG_DATA2", "square_color[i][j-1] " + square_color[i][j-1] );
 		}
-		if( a != SQUARE_AB_NUM ){
-			Log.w( "DEBUG_DATA2", "color_check[a+1][b] " + color_check[a+1][b] );
-			if( color_check[a+1][b] == 1 && !( a+1 == before_check_a && b == before_check_b ) ){
-				tojita_flg = true;
+		if( i != SQUARE_NUM - 1 ){
+			Log.w( "DEBUG_DATA2", "square_color[i+1][j] " + square_color[i+1][j] );
+			if( square_color[i+1][j] == 1 && !( i+1 == before_fill_i && j == before_fill_j ) ){
+				tabun_close_flg = true;
 
 				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE3"  );
 			}
+			Log.w( "DEBUG_DATA2", "square_color[i+1][j] " + square_color[i+1][j] );
 		}
-		if( b != SQUARE_AB_NUM ){
-			Log.w( "DEBUG_DATA2", "color_check[a][b+1] " + color_check[a][b+1] );
-			if( color_check[a][b+1] == 1 && !( a == before_check_a && b+1 == before_check_b ) ){
-				tojita_flg = true;
+		if( j != SQUARE_NUM - 1 ){
+			Log.w( "DEBUG_DATA2", "square_color[i][j+1] " + square_color[i][j+1] );
+			if( square_color[i][j+1] == 1 && !( i == before_fill_i && j+1 == before_fill_j ) ){
+				tabun_close_flg = true;
 
 				Log.w( "DEBUG_DATA2", "TRUEEEEEEEEEE4"  );
 			}
+			Log.w( "DEBUG_DATA2", "square_color[i][j+1] " + square_color[i][j+1] );
 		}
 
-		if(!tojita_flg) return;
+		Log.w( "DEBUG_DATA2", "ssssssssssssssssssss1 " );
 
-		boolean kanzenni_tojita = false;
+		if(!tabun_close_flg) return;
+
+		Log.w( "DEBUG_DATA2", "ssssssssssssssssssss2 " );
+
 		// 左が開いていたら、閉じているか確認
-		if( a != 0 && color_check[a-1][b] == 0 ) {
-			color_check[a-1][b] = 2;
-			Log.w( "DEBUG_DATA333", "I AM 2 a" + a  );
-			Log.w( "DEBUG_DATA333", "I AM 2 b" + b  );
+		if( i != 0 && square_color[i-1][j] == 0 ) {
+			square_color[i-1][j] = 2;
+			Log.w( "DEBUG_DATA333", "I AM 2 i" + i  );
+			Log.w( "DEBUG_DATA333", "I AM 2 j" + j  );
 			// 完全に閉じているかチェック、閉じてる範囲を3に書き換え
-			kanzenni_tojita = ZanteiCheck(a-1,b);
+			kakujituni_close_flg = CheckCloseComp(i-1,j);
 
-			Log.w( "DEBUG_DATA", "kanzenni_tojita　" + kanzenni_tojita);
-			SetColorDesu(kanzenni_tojita,canvas);
-
-
-
-
+			Log.w( "DEBUG_DATA", "kanzenni_tojita　" + kakujituni_close_flg);
+			// 閉じられているところを塗る
+			FillClose(kakujituni_close_flg,canvas);
 		}
+
 
 	}
 
+	// 完全に閉じらているか確認し、３番をセットする
+	public boolean CheckCloseComp(int check_i,int check_j){
+		Log.w( "DEBUG_DATA3", "CheckCloseFull");
+		// ループフラグ
+		boolean roop_flg = true;
+		// 検索中フラグ
+		boolean kensakucyu_flg = false;
+		// コンプリートフラグ
+		boolean comp_flg = false;
 
-	public void SetColorDesu(boolean mode,Canvas canvas){
+		int i,j;
 
-		int i;
-		int j;
+		while(roop_flg){
+			Log.w( "DEBUG_DATA3", "ROOP");
+			for( i = 0; i < SQUARE_NUM; i++ ) {
+				for (j = 0; j < SQUARE_NUM; j++) {
+					Log.w( "DEBUG_DATA3", "i " + i);
+					Log.w( "DEBUG_DATA3", "j " + j);
+					if( square_color[i][j] == 2 ){
+						//１個でも2があれば、再検索するよ
+						roop_flg = true;
+						kensakucyu_flg = true;
+						comp_flg = true;
+
+						Log.w( "DEBUG_DATA3", "TOOTTAAAA");
+
+						// 検索対象の左が0番だったら検索対象に追加
+						if( i != 0 ){
+							Log.w( "DEBUG_DATA3", "1");
+							if( square_color[i-1][j] == 0 ) square_color[i-1][j] = 2;
+						}
+						if( j != 0 ){
+							Log.w( "DEBUG_DATA3", "2");
+							if( square_color[i][j-1] == 0 ) square_color[i][j-1] = 2;
+						}
+						if( i != ( SQUARE_NUM - 1 ) ){
+							Log.w( "DEBUG_DATA3", "3");
+							if( square_color[i+1][j] == 0 ) square_color[i+1][j] = 2;
+						}
+						if( j != ( SQUARE_NUM - 1 ) ){
+							Log.w( "DEBUG_DATA3", "4");
+							if( square_color[i][j+1] == 0 ) square_color[i][j+1] = 2;
+						}
+						// チェック済み
+						Log.w( "DEBUG_DATA3", "I AM 3 i" + i);
+						Log.w( "DEBUG_DATA3", "I AM 3 j" + j);
+						square_color[i][j] = 3;
+						Log.w( "DEBUG_DATA3", "aaa1");
+
+						// 検索対象が画面端に来たら、囲まれていない
+						if( i == 0 || j == 0 || i == ( SQUARE_NUM - 1 ) || j == ( SQUARE_NUM - 1 ) ){
+							Log.w( "DEBUG_DATA3", "ERRRRRRRRRRRRRRRRRRRRRR");
+							roop_flg = false;
+							kensakucyu_flg = false;
+							comp_flg = false;
+
+							break;
+						}
+						Log.w( "DEBUG_DATA3", "aaa2");
+					}
+				}
+				if(!kensakucyu_flg) break;
+			}
+			Log.w( "DEBUG_DATA3", "aaa3");
+
+			if( !kensakucyu_flg ){
+				roop_flg = false;
+			}
+
+		}
+
+		return comp_flg;
+	}
+
+	//mode 0:閉じられていない、1:閉じられている
+	public void FillClose(boolean mode,Canvas canvas){
+
+		int i,j;
 
 		Log.w( "DEBUG_DATA", "");
 
 		Paint paint = new Paint();
 
-		for( i = -SQUARE_NUM; i <= SQUARE_NUM; i++ ){
-			for( j = -SQUARE_NUM; j <= SQUARE_NUM; j++ ){
-Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+SQUARE_NUM][j+SQUARE_NUM] );
-				if( color_check[i+SQUARE_NUM][j+SQUARE_NUM] == 3 ){
+		for( i = 0; i < SQUARE_NUM; i++ ){
+			for( j = 0; j < SQUARE_NUM; j++ ){
+				if( square_color[i][j] == 3 ){
 					if( mode == true){
 						Log.w( "DEBUG_DATA33", "i " + i);
 						Log.w( "DEBUG_DATA33", "j " + j);
@@ -343,10 +394,10 @@ Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+
 						paint.setStyle(Paint.Style.FILL);
 						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa3 center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x " + (center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x);
 						canvas.drawRect(
-								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
-								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * i) + move_x,
-								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * j) + move_y,
+								( center_x - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+								( center_y - (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
+								( center_x + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( i - ( SQUARE_NUM / 2 ) ) ) + move_x,
+								( center_y + (SQUARE_LENGTH / 2) ) + (SQUARE_LENGTH * ( j - ( SQUARE_NUM / 2 ) ) ) + move_y,
 								paint);
 
 						Log.w( "DEBUG_DATA33", "aaaaaaaaaaaaaaaaaa4");
@@ -354,7 +405,7 @@ Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+
 					}
 					// 0に戻しておく
 					else{
-						color_check[i+SQUARE_NUM][j+SQUARE_NUM] = 0;
+						square_color[i][j] = 0;
 					}
 				}
 
@@ -363,71 +414,7 @@ Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+
 	}
 
 
-	public boolean ZanteiCheck(int check_a,int check_b){
-		Log.w( "DEBUG_DATA3", "ZanteiCheck");
-		boolean roop_flg = true;
-		boolean kanzenni_tojiteru = true;
-		boolean kensaku_taisyou_mada_ari_flg = false;
-		boolean dassyutu_flg = false;
-		int a,b;
-		while(roop_flg){
-			roop_flg = false;
-			Log.w( "DEBUG_DATA3", "ROOP");
-			for( a = 0; a <= SQUARE_AB_NUM; a++ ) {
-				for (b = 0; b <= SQUARE_AB_NUM; b++) {
-					Log.w( "DEBUG_DATA3", "a " + a);
-					Log.w( "DEBUG_DATA3", "b " + b);
-					if( color_check[a][b] == 2 ){
-						roop_flg = true;
-						Log.w( "DEBUG_DATA3", "TOOTTAAAA");
-						kensaku_taisyou_mada_ari_flg = true;
-						// 検索対象の左が0番だったら検索対象に追加
-						if( a != 0 ){
-							Log.w( "DEBUG_DATA3", "1");
-							if( color_check[a-1][b] == 0 ) color_check[a-1][b] = 2;
-						}
-						if( b != 0 ){
-							Log.w( "DEBUG_DATA3", "2");
-							if( color_check[a][b-1] == 0 ) color_check[a][b-1] = 2;
-						}
-						if( a != SQUARE_AB_NUM ){
-							Log.w( "DEBUG_DATA3", "3");
-							if( color_check[a+1][b] == 0 ) color_check[a+1][b] = 2;
-						}
-						if( b != SQUARE_AB_NUM ){
-							Log.w( "DEBUG_DATA3", "4");
-							if( color_check[a][b+1] == 0 ) color_check[a][b+1] = 2;
-						}
-						// チェック済み
-						Log.w( "DEBUG_DATA3", "I AM 3 a" + a);
-						Log.w( "DEBUG_DATA3", "I AM 3 b" + b);
-						color_check[a][b] = 3;
-						Log.w( "DEBUG_DATA3", "aaa1");
 
-						// 検索対象が画面端に来たら、囲まれていない
-						if( a == 0 || b == 0 || a == SQUARE_AB_NUM || b == SQUARE_AB_NUM ){
-							Log.w( "DEBUG_DATA3", "ERRRRRRRRRRRRRRRRRRRRRR");
-							roop_flg = false;
-							kanzenni_tojiteru = false;
-							dassyutu_flg = true;
-							break;
-						}
-						Log.w( "DEBUG_DATA3", "aaa2");
-					}
-				}
-				if(dassyutu_flg) break;
-			}
-			Log.w( "DEBUG_DATA3", "aaa3");
-			// もう検索対象なし、囲まれていた
-			if(kanzenni_tojiteru && kensaku_taisyou_mada_ari_flg == false){
-				Log.w( "DEBUG_DATA3", "OKKKKKKKKKKKKKKKKKKKKKKKK");
-				roop_flg = false;
-			}
-			Log.w( "DEBUG_DATA3", "aaa4");
-		}
-
-		return kanzenni_tojiteru;
-	}
 
 
 	// タッチイベントを処理するためOverrideする
@@ -477,16 +464,6 @@ Log.w( "DEBUG_DATA", "color_check[i+SQUARE_NUM][j+SQUARE_NUM] " + color_check[i+
 	@Override public void surfaceChanged( SurfaceHolder holder, int format, int width, int height) {
 		screen_width = width;
 		screen_height = height;
-
-//		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//		paint.setColor(Color.BLUE);
-//		paint.setStyle(Style.FILL);
-//
-//		Canvas canvas = holder.lockCanvas();
-//		canvas.drawColor(Color.BLACK);
-//		canvas.drawCircle(100, 200, 50, paint);
-//		holder.unlockCanvasAndPost(canvas);
-
 	}
 	// 作成時に読みだされる
 	// この時点で描画準備はできていて、SurfaceHoderのインスタンスを返却する
